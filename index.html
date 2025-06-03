@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Submission Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Your Information</h1>
+        <form action="submit.php" method="POST">
+            <div>
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" required>
+            </div>
+            <div>
+                <label for="homeCity">Home City:</label>
+                <input type="text" id="homeCity" name="homeCity" required>
+            </div>
+            <div>
+                <label for="homeCountry">Home Country:</label>
+                <input type="text" id="homeCountry" name="homeCountry" required>
+            </div>
+            <div>
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        <div id="message-area">
+            <?php
+                // Display success/error messages if redirected back with a query parameter
+                if (isset($_GET['status'])) {
+                    if ($_GET['status'] === 'success') {
+                        echo '<p class="success">Thank you! Your information has been submitted.</p>';
+                    } elseif ($_GET['status'] === 'error') {
+                        echo '<p class="error">There was an error submitting your information. Please try again.</p>';
+                    } elseif ($_GET['status'] === 'invalid') {
+                        echo '<p class="error">Please fill out all fields.</p>';
+                    }
+                }
+            ?>
+        </div>
+    </div>
+    <script>
+        // Optional: Clear message after a few seconds
+        setTimeout(() => {
+            const messageArea = document.getElementById('message-area');
+            if (messageArea) {
+                messageArea.innerHTML = '';
+            }
+        }, 5000); // 5 seconds
+    </script>
+</body>
+</html>
