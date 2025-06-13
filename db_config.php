@@ -5,24 +5,34 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // --- Database Configuration ---
-// For Azure, we'll get the path from an App Setting for better security and persistence.
-// For local development, you can use a relative path.
-$sqlite_db_path = getenv('SQLITE_DB_PATH') ?: __DIR__ . '/data/submissions.sqlite';
+$default_db_path = __DIR__ . '/data/submissions.sqlite'; // Fallback for local dev if env var not set
+$sqlite_db_path = getenv('SQLITE_DB_PATH') ?: $default_db_path;
+
 $db_dir = dirname($sqlite_db_path);
 
-// Ensure the data directory exists
+// Check if the directory exists
 if (!is_dir($db_dir)) {
-    if (!mkdir($db_dir, 0755, true)) {
-        die("Failed to create database directory: " . $db_dir);
+    // Attempt to create the directory
+    // The 'true' parameter allows creation of nested directories
+    if (!mkdir($db_dir, 0775, true)) { // Using 0775 for potentially better group writability
+        $error = error_get_last();
+        die("Failed to create database directory: " . $db_dir . " - Error: " . ($error['message'] ?? 'Unknown error'));
     }
+    // Optional: Log successful directory creation
+    // error_log("Database directory created: " . $db_dir);
 }
+
+// Check if the directory is writable AFTER attempting to create it
+if (!is_writable($db_dir)) {
+    die("Database directory is not writable: " . $db_dir . ". Please check permissions. Current owner/group: " . fileowner($db_dir) . "/" . filegroup($db_dir) . " Permissions: " . substr(sprintf('%o', fileperms($db_dir)), -4));
+}
+
 
 try {
     $pdo = new PDO('sqlite:' . $sqlite_db_path);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    // Create table if it doesn't exist
     $pdo->exec("CREATE TABLE IF NOT EXISTS submissions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         firstName TEXT NOT NULL,
@@ -32,15 +42,12 @@ try {
     )");
 
 } catch (PDOException $e) {
-    // For production, log this error instead of die()
-    die("Database connection failed or table creation failed: " . $e->getMessage() . " (Path: " . $sqlite_db_path . ")");
+    die("Database connection failed or table creation failed: " . $e->getMessage() . " (Path attempted: " . $sqlite_db_path . ")");
 }
 
 // --- Admin Configuration ---
-// For a real app, store this HASHED password in an environment variable or secure config.
-// Password is "admin123"
 define('ADMIN_USERNAME', getenv('ADMIN_USER') ?: 'admin');
-define('ADMIN_PASSWORD_HASH', getenv('ADMIN_PASS_HASH') ?: '$2y$10$QjA7M2cXR0B6I8S.HSAdi.0GvjHWYWGq0hOqHdp8uXl.J.J9uC/aa');
+define('ADMIN_PASSWORD_HASH', getenv('ADMIN_PASS_HASH') ?: '$2y$10$QjA7M2cXR0B6I8S.HSAdi.0GvjHWYWGq0hOqHdp8uXl.J.J9uC/aa'); // admin123
 
 function isAdminLoggedIn() {
     return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
