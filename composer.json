@@ -1,0 +1,9 @@
+{
+    "name": "yourusername/cruise-app",
+    "description": "A web app to collect and display user submissions.",
+    "type": "project",
+    "require": {
+        "php": ">=7.4 || ^8.0"
+    },
+    "license": "proprietary"
+}

@@ -1,0 +1,7 @@
+vendor/
+data/submissions.sqlite # If you prefer not to commit the DB directly
+*.log
+
+# IDE specific
+.vscode/
+.idea/
