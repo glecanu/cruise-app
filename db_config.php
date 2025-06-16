@@ -1,4 +1,10 @@
 <?php
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1); // Try to force display to browser/log
+ini_set('log_errors', 1);
+ini_set('error_log', '/home/LogFiles/php_errors.log'); // Explicitly log to a persistent file
+
 // Start session for admin pages
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
