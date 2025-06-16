@@ -14,7 +14,7 @@ $db_dir = dirname($sqlite_db_path);
 if (!is_dir($db_dir)) {
     // Attempt to create the directory
     // The 'true' parameter allows creation of nested directories
-    if (!mkdir($db_dir, 0775, true)) { // Using 0775 for potentially better group writability
+    if (!mkdir($db_dir, 0775, true)) { // Changed to 0775
         $error = error_get_last();
         die("Failed to create database directory: " . $db_dir . " - Error: " . ($error['message'] ?? 'Unknown error'));
     }
@@ -23,8 +23,9 @@ if (!is_dir($db_dir)) {
 }
 
 // Check if the directory is writable AFTER attempting to create it
-if (!is_writable($db_dir)) {
-    die("Database directory is not writable: " . $db_dir . ". Please check permissions. Current owner/group: " . fileowner($db_dir) . "/" . filegroup($db_dir) . " Permissions: " . substr(sprintf('%o', fileperms($db_dir)), -4));
+if (!is_writable($db_dir)) { // This check is critical
+    $actual_permissions = substr(sprintf('%o', fileperms($db_dir)), -4);
+    die("Database directory (" . $db_dir . ") is NOT WRITABLE by PHP. Permissions: " . $actual_permissions . ". PHP User (effective): " . get_current_user() . " (UID: " . getmyuid() . " GID: " . getmygid() . ")");
 }
 
 
