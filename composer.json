@@ -3,7 +3,8 @@
     "description": "A web app to collect and display user submissions.",
     "type": "project",
     "require": {
-        "php": ">=7.4 || ^8.0"
+        "php": ">=7.4 || ^8.0",
+        "microsoft/azure-storage-table": "^1.1"
     },
     "license": "proprietary"
 }
