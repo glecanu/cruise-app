@@ -37,11 +37,13 @@
 
             if (count($submissions) > 0) {
                 echo "<table>";
-                echo "<thead><tr><th>RowKey (ID)</th><th>First Name</th><th>Home City</th><th>Home Country</th><th>Time</th></tr></thead>";
+                // UPDATED: Removed RowKey (ID) from the header
+                echo "<thead><tr><th>First Name</th><th>Home City</th><th>Home Country</th><th>Time</th></tr></thead>";
                 echo "<tbody>";
                 foreach ($submissions as $entity) {
                     echo "<tr>";
-                    echo "<td>" . htmlspecialchars($entity->getRowKey()) . "</td>";
+                    // UPDATED: Removed the cell displaying RowKey
+                    // echo "<td>" . htmlspecialchars($entity->getRowKey()) . "</td>";
                     echo "<td>" . htmlspecialchars($entity->getPropertyValue('FirstName')) . "</td>";
                     echo "<td>" . htmlspecialchars($entity->getPropertyValue('HomeCity')) . "</td>";
                     echo "<td>" . htmlspecialchars($entity->getPropertyValue('HomeCountry')) . "</td>";
