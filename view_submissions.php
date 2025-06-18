@@ -1,4 +1,4 @@
-<?php require_once 'db_config.php'; // Includes $tableClient ?>
+<?php require_once 'db_config.php'; // Includes $tableClient, $storageTableName ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,25 +18,22 @@
 
         <?php
         try {
-            // Simple query for all entities in the 'submission' partition.
-            // For better performance on large tables, use filters.
-            // Table storage doesn't have an easy "ORDER BY" like SQL.
-            // You'd typically sort client-side or design RowKeys for desired order.
-            $filter = "PartitionKey eq 'submission'";
-            $options = new QueryEntitiesOptions();
-            // $options->addSelectField('FirstName'); // Select specific fields if needed
+            $filter = "PartitionKey eq 'submission'"; // Querying our single partition
+            $options = new \MicrosoftAzure\Storage\Table\Models\QueryEntitiesOptions();
+            // $options->addSelectField('FirstName'); // Example: select specific fields
 
             $result = $tableClient->queryEntities($storageTableName, $filter, $options);
             $submissions = $result->getEntities();
 
             // Sort by SubmissionTime client-side (descending)
-            usort($submissions, function ($a, $b) {
-                $timeA = $a->getPropertyValue('SubmissionTime'); // Assuming it's a DateTime object
-                $timeB = $b->getPropertyValue('SubmissionTime');
-                if ($timeA == $timeB) return 0;
-                return ($timeA < $timeB) ? 1 : -1; // For descending
-            });
-
+            if (!empty($submissions)) {
+                usort($submissions, function ($a, $b) {
+                    $timeA = $a->getProperty('SubmissionTime')->getValue();
+                    $timeB = $b->getProperty('SubmissionTime')->getValue();
+                    if ($timeA == $timeB) return 0;
+                    return ($timeA < $timeB) ? 1 : -1; // For descending
+                });
+            }
 
             if (count($submissions) > 0) {
                 echo "<table>";
@@ -48,18 +45,20 @@
                     echo "<td>" . htmlspecialchars($entity->getPropertyValue('FirstName')) . "</td>";
                     echo "<td>" . htmlspecialchars($entity->getPropertyValue('HomeCity')) . "</td>";
                     echo "<td>" . htmlspecialchars($entity->getPropertyValue('HomeCountry')) . "</td>";
-                    $submissionTime = $entity->getPropertyValue('SubmissionTime');
-                    echo "<td>" . htmlspecialchars($submissionTime instanceof DateTime ? $submissionTime->format('Y-m-d H:i:s') : 'N/A') . "</td>";
+                    $submissionTime = $entity->getPropertyValue('SubmissionTime'); // This is a DateTime object
+                    echo "<td>" . htmlspecialchars($submissionTime instanceof DateTime ? $submissionTime->format('Y-m-d H:i:s T') : 'N/A') . "</td>";
                     echo "</tr>";
                 }
                 echo "</tbody></table>";
             } else {
                 echo "<p>No submissions yet.</p>";
             }
-        } catch (ServiceException $e) {
+        } catch (\MicrosoftAzure\Storage\Common\Exceptions\ServiceException $e) {
             echo "<p class='error'>Could not retrieve submissions: " . htmlspecialchars($e->getErrorText()) . "</p>";
+            error_log("Azure Table Storage Query Error: " . $e->getErrorText() . " (Code: " . $e->getCode() . ")");
         } catch (Exception $e) {
             echo "<p class='error'>An unexpected error occurred: " . htmlspecialchars($e->getMessage()) . "</p>";
+            error_log("General Query Error: " . $e->getMessage());
         }
         ?>
     </div>
