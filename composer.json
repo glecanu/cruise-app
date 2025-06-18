@@ -4,7 +4,8 @@
     "type": "project",
     "require": {
         "php": ">=7.4 || ^8.0",
-        "microsoft/azure-storage-table": "^1.1"
+        "microsoft/azure-storage-table": "^1.1",
+        "ramsey/uuid": "^4.8"
     },
     "license": "proprietary"
 }
