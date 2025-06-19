@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1); // Tries to force errors to browser (may be overridden)
+ini_set('log_errors', 1);    // Ensures errors are logged
+ini_set('error_log', '/home/LogFiles/php_errors.log'); // Explicit log file
+// session_start(); should come AFTER these ini_set calls if it's in db_config.php
 
 // Start session for admin pages
 if (session_status() == PHP_SESSION_NONE) {
