@@ -11,11 +11,19 @@
     <div class="container">
         <h1>British Isles 2025 - Cruising Ducks</h1>
         
-        <img src="All_30_ducks.jpg" alt="A collection of 30 cruising ducks in front of a Scotland travel guide" class="banner-image">
+        <!-- UPDATED: Using a responsive <img> tag with srcset -->
+        <img 
+            src="All_30_ducks-medium.jpg"  
+            srcset="All_30_ducks-small.jpg 400w,
+                    All_30_ducks-medium.jpg 800w,
+                    All_30_ducks-large.jpg 1200w"
+            sizes="(max-width: 600px) 90vw, 550px"
+            alt="A collection of 30 cruising ducks in front of a Scotland travel guide" 
+            class="banner-image">
 
         <div class="intro-text">
             <p><strong>Thank you, fellow passenger!</strong> You've found one of our cruising ducks!</p>
-            <p>We'd be thrilled if you could enter your information in the form below, including the number from the bottom of the duck. Afterwards, feel free to hide it again for another passenger to find and continue the journey!</p>
+            <p>We'd be thrilled if you could enter your information in the form below, including the number from the card with the duck. Afterwards, feel free to hide it again for another passenger to find and continue the journey!</p>
             <p>
                 Want to see all the ducks and their numbers? 
                 <a href="https://photos.app.goo.gl/12NYYifC5tbrjwVp9" target="_blank" rel="noopener noreferrer">Visit our Google Photos Album</a>
@@ -34,14 +42,14 @@
                 <?php
                     if ($_GET['status'] === 'success') echo "Thank you! Your submission has been recorded.";
                     elseif ($_GET['status'] === 'error') echo "There was an error with your submission.";
-                    // Removed 'invalid' check as fields are now optional
                 ?>
             </div>
         <?php endif; ?>
 
         <form action="submit_handler.php" method="POST">
             <div>
-                <label for="duckNumber">Duck Number (from the bottom of the duck):</label>
+                <!-- UPDATED: Text changed from "bottom of the duck" -->
+                <label for="duckNumber">Duck Number (from the card with the duck):</label>
                 <input type="text" id="duckNumber" name="duckNumber">
             </div>
             <div>
