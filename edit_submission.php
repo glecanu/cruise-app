@@ -6,7 +6,7 @@ $partitionKey = $_GET['partitionKey'] ?? null;
 $rowKey = $_GET['rowKey'] ?? null;
 
 if (!$partitionKey || !$rowKey) {
-    header('Location: admin_dashboard.php?status=Missing ID for edit&status_type=error');
+    header('Location: admin_dashboard.php?status_message=Missing ID for edit&message_type=error');
     exit;
 }
 
@@ -15,22 +15,17 @@ try {
     $result = $tableClient->getEntity($storageTableName, $partitionKey, $rowKey);
     $submission = $result->getEntity();
 } catch (\MicrosoftAzure\Storage\Common\Exceptions\ServiceException $e) {
-    // Check if it's a "ResourceNotFound" error
-    if ($e->getCode() == 404) { // HttpStatusCode::NOT_FOUND
-        header('Location: admin_dashboard.php?status=Submission not found (PK:'.$partitionKey.', RK:'.$rowKey.')&status_type=error');
+    if ($e->getCode() == 404) {
+        header('Location: admin_dashboard.php?status_message=Submission not found&message_type=error');
     } else {
-        header('Location: admin_dashboard.php?status=Error fetching submission: '.htmlspecialchars($e->getErrorText()).'&status_type=error');
-        error_log("Azure Table Storage GetEntity Error for PK:{$partitionKey}, RK:{$rowKey} - " . $e->getErrorText() . " (Code: " . $e->getCode() . ")");
+        header('Location: admin_dashboard.php?status_message=Error fetching submission&message_type=error');
+        error_log("Azure Table Storage GetEntity Error: " . $e->getErrorText());
     }
-    exit;
-} catch (Exception $e) {
-    header('Location: admin_dashboard.php?status=General error fetching submission&status_type=error');
-    error_log("General GetEntity Error for PK:{$partitionKey}, RK:{$rowKey} - " . $e->getMessage());
     exit;
 }
 
-if (!$submission) { // Should be caught by ServiceException 404, but as a fallback.
-    header('Location: admin_dashboard.php?status=Submission not found after fetch attempt&status_type=error');
+if (!$submission) {
+    header('Location: admin_dashboard.php?status_message=Submission not found&message_type=error');
     exit;
 }
 ?>
@@ -52,17 +47,22 @@ if (!$submission) { // Should be caught by ServiceException 404, but as a fallba
         <form action="update_submission_handler.php" method="POST">
             <input type="hidden" name="partitionKey" value="<?php echo htmlspecialchars($submission->getPartitionKey()); ?>">
             <input type="hidden" name="rowKey" value="<?php echo htmlspecialchars($submission->getRowKey()); ?>">
+            
+            <div>
+                <label for="duckNumber">Duck Number:</label>
+                <input type="text" id="duckNumber" name="duckNumber" value="<?php echo htmlspecialchars($submission->getPropertyValue('DuckNumber')); ?>">
+            </div>
             <div>
                 <label for="firstName">First Name:</label>
-                <input type="text" id="firstName" name="firstName" value="<?php echo htmlspecialchars($submission->getPropertyValue('FirstName')); ?>" required>
+                <input type="text" id="firstName" name="firstName" value="<?php echo htmlspecialchars($submission->getPropertyValue('FirstName')); ?>">
             </div>
             <div>
                 <label for="homeCity">Home City:</label>
-                <input type="text" id="homeCity" name="homeCity" value="<?php echo htmlspecialchars($submission->getPropertyValue('HomeCity')); ?>" required>
+                <input type="text" id="homeCity" name="homeCity" value="<?php echo htmlspecialchars($submission->getPropertyValue('HomeCity')); ?>">
             </div>
             <div>
                 <label for="homeCountry">Home Country:</label>
-                <input type="text" id="homeCountry" name="homeCountry" value="<?php echo htmlspecialchars($submission->getPropertyValue('HomeCountry')); ?>" required>
+                <input type="text" id="homeCountry" name="homeCountry" value="<?php echo htmlspecialchars($submission->getPropertyValue('HomeCountry')); ?>">
             </div>
             <div>
                 <button type="submit">Update Submission</button>

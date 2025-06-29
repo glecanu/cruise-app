@@ -1,12 +1,6 @@
 <?php
-// 1. Include configuration and ensure admin is logged in
-require_once 'db_config.php'; // This should define $tableClient, $storageTableName, and session functions
-ensureAdminLoggedIn();      // This function redirects if not logged in
-
-// It's good practice to also have use statements here if not in db_config.php,
-// though if db_config.php defines $tableClient correctly, we might only need QueryEntitiesOptions here.
-// use MicrosoftAzure\Storage\Table\Models\QueryEntitiesOptions;
-// use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
+require_once 'db_config.php';
+ensureAdminLoggedIn();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,9 +10,8 @@ ensureAdminLoggedIn();      // This function redirects if not logged in
     <title>Admin Dashboard - Manage Submissions</title>
     <link rel="stylesheet" href="style.css">
     <script>
-        function confirmDelete(rowKey) { // Changed parameter to rowKey for clarity
+        function confirmDelete(rowKey) {
             if (confirm("Are you sure you want to delete submission with RowKey: " + rowKey + "?")) {
-                // Assuming your delete form ID is 'delete-form-' + rowKey
                 document.getElementById('delete-form-' + rowKey).submit();
             }
         }
@@ -34,9 +27,8 @@ ensureAdminLoggedIn();      // This function redirects if not logged in
             <a href="logout.php">Logout</a>
         </nav>
 
-        <?php // Display status messages from redirects (e.g., after update/delete)
-        if (isset($_GET['status_message'])): // Using 'status_message' for clarity
-            $message_type = htmlspecialchars($_GET['message_type'] ?? 'success'); // default to success
+        <?php if (isset($_GET['status_message'])):
+            $message_type = htmlspecialchars($_GET['message_type'] ?? 'success');
         ?>
             <div class="message <?php echo $message_type; ?>">
                 <?php echo htmlspecialchars($_GET['status_message']); ?>
@@ -47,32 +39,27 @@ ensureAdminLoggedIn();      // This function redirects if not logged in
 
         <?php
         try {
-            $filter = "PartitionKey eq 'submission'"; // Assuming 'submission' is your PartitionKey
+            $filter = "PartitionKey eq 'submission'";
             $options = new \MicrosoftAzure\Storage\Table\Models\QueryEntitiesOptions();
-            // You can add $options->addSelectField('PropertyName') if you only need specific columns
-
             $result = $tableClient->queryEntities($storageTableName, $filter, $options);
             $submissions = $result->getEntities();
 
-            // Sort by SubmissionTime client-side (descending) as Table Storage doesn't sort arbitrarily
             if (!empty($submissions)) {
                 usort($submissions, function ($a, $b) {
-                    $timeA = $a->getProperty('SubmissionTime')->getValue(); // Property value is DateTime object
+                    $timeA = $a->getProperty('SubmissionTime')->getValue();
                     $timeB = $b->getProperty('SubmissionTime')->getValue();
-                    if ($timeA == $timeB) {
-                        return 0;
-                    }
-                    return ($timeA < $timeB) ? 1 : -1; // For descending order
+                    return ($timeA < $timeB) ? 1 : -1;
                 });
             }
 
             if (count($submissions) > 0) {
                 echo "<table>";
-                echo "<thead><tr><th>RowKey</th><th>First Name</th><th>Home City</th><th>Home Country</th><th>Submission Time</th><th>Actions</th></tr></thead>";
+                echo "<thead><tr><th>RowKey</th><th>Duck Number</th><th>First Name</th><th>Home City</th><th>Home Country</th><th>Time</th><th>Actions</th></tr></thead>";
                 echo "<tbody>";
                 foreach ($submissions as $entity) {
                     $partitionKey = htmlspecialchars($entity->getPartitionKey());
                     $rowKey = htmlspecialchars($entity->getRowKey());
+                    $duckNumber = htmlspecialchars($entity->getPropertyValue('DuckNumber'));
                     $firstName = htmlspecialchars($entity->getPropertyValue('FirstName'));
                     $homeCity = htmlspecialchars($entity->getPropertyValue('HomeCity'));
                     $homeCountry = htmlspecialchars($entity->getPropertyValue('HomeCountry'));
@@ -81,6 +68,7 @@ ensureAdminLoggedIn();      // This function redirects if not logged in
 
                     echo "<tr>";
                     echo "<td>" . $rowKey . "</td>";
+                    echo "<td>" . $duckNumber . "</td>";
                     echo "<td>" . $firstName . "</td>";
                     echo "<td>" . $homeCity . "</td>";
                     echo "<td>" . $homeCountry . "</td>";
@@ -100,12 +88,10 @@ ensureAdminLoggedIn();      // This function redirects if not logged in
                 echo "<p>No submissions have been made yet.</p>";
             }
         } catch (\MicrosoftAzure\Storage\Common\Exceptions\ServiceException $e) {
-            // Display a user-friendly error and log the detailed one
-            echo "<p class='error'>Error retrieving submissions: Could not connect to data store or query failed.</p>";
-            error_log("Azure Table Storage Admin Dashboard - ServiceException: " . $e->getErrorText() . " (Code: " . $e->getCode() . ")");
+            echo "<p class='error'>Error retrieving submissions: " . htmlspecialchars($e->getErrorText()) . "</p>";
+            error_log("Azure Table Storage Admin Dashboard - ServiceException: " . $e->getErrorText());
         } catch (Exception $e) {
-            // Catch any other general exceptions
-            echo "<p class='error'>An unexpected error occurred while fetching submissions.</p>";
+            echo "<p class='error'>An unexpected error occurred.</p>";
             error_log("Azure Table Storage Admin Dashboard - General Exception: " . $e->getMessage());
         }
         ?>
